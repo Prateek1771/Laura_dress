@@ -1,0 +1,34 @@
+{
+  "name": "vivahstyle",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@insforge/sdk": "latest",
+    "bcryptjs": "^2.4.3",
+    "groq-sdk": "^0.9.1",
+    "next": "^16.2.9",
+    "posthog-js": "^1.240.6",
+    "posthog-node": "^4.13.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "recharts": "^3.9.0",
+    "skillfish": "^1.0.38",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.10",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "tailwindcss": "^4.1.10",
+    "typescript": "^5"
+  }
+}

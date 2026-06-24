@@ -1,0 +1,69 @@
+@import "tailwindcss";
+
+@theme {
+  /* Surfaces */
+  --color-ivory: #FAF7F2;
+  --color-surface: #FFFFFF;
+  --color-surface-soft: #F5EFE6;
+  --color-border: #E8DFD3;
+
+  /* Brand */
+  --color-primary: #7A1F2B;
+  --color-primary-hover: #641923;
+  --color-primary-soft: #F7E9EB;
+  --color-gold: #C9A227;
+  --color-gold-soft: #F3E8C9;
+
+  /* Text */
+  --color-ink: #2B2118;
+  --color-ink-secondary: #6F6258;
+  --color-ink-muted: #9C8F84;
+
+  /* Match score tiers */
+  --color-score-excellent: #16A34A;
+  --color-score-strong: #D97706;
+  --color-score-good: #EA580C;
+  --color-score-track: #EFE8DC;
+
+  /* Status */
+  --color-status-info: #2563EB;
+  --color-status-success: #16A34A;
+  --color-status-warning: #D97706;
+  --color-status-danger: #DC2626;
+  --color-status-neutral: #9C8F84;
+
+  /* Payment mode badge accents */
+  --color-pay-cash: #15803D;
+  --color-pay-upi: #6D28D9;
+  --color-pay-card: #1D4ED8;
+  --color-pay-netbanking: #0F766E;
+
+  /* Dashboard chart palette */
+  --color-chart-1: #7A1F2B;
+  --color-chart-2: #6D28D9;
+  --color-chart-3: #1D4ED8;
+  --color-chart-4: #0F766E;
+  --color-chart-5: #9C8F84;
+
+  /* Skin tone swatches (visual only) */
+  --color-tone-light: #F3D9C2;
+  --color-tone-light-medium: #E8B98F;
+  --color-tone-medium: #C98A5B;
+  --color-tone-deep: #8D5524;
+
+  /* Typography */
+  --font-display: "Playfair Display", serif;
+  --font-sans: "Inter", sans-serif;
+
+  /* Radii */
+  --radius-card: 12px;
+  --radius-button: 8px;
+  --radius-badge: 999px;
+  --radius-input: 8px;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
