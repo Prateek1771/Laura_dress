@@ -9,19 +9,16 @@ const ROLE_HOME: Record<string, string> = {
 };
 
 const PROTECTED_PREFIXES: Record<string, string[]> = {
-  '/(admin)': ['owner'],
   '/dashboard': ['owner'],
   '/inventory': ['owner'],
   '/settings': ['owner'],
-  '/(cashier)': ['cashier', 'owner'],
   '/billing': ['cashier', 'owner'],
   '/returns': ['cashier', 'owner'],
-  '/(stylist)': ['stylist', 'owner'],
   '/onboarding': ['stylist', 'owner'],
-  '/explore': ['stylist', 'cashier', 'owner'],
+  '/explore': ['stylist', 'owner'],
 };
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === '/' || pathname === '/guidelines' || pathname.startsWith('/api/')) {
@@ -29,7 +26,7 @@ export function middleware(request: NextRequest) {
   }
 
   const raw = request.cookies.get('vivah_session')?.value;
-  const session = raw ? decodeSession(raw) : null;
+  const session = raw ? await decodeSession(raw) : null;
 
   if (!session) {
     return NextResponse.redirect(new URL('/', request.url));

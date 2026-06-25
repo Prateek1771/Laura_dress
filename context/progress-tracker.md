@@ -3,15 +3,15 @@
 ## Current Status
 
 **Current Phase:** Phase 1 — Foundation & Admin
-**Last Completed:** Feature 01 — Project Scaffold + Design System
-**Next:** Feature 02 — Store Gate + Role Auth + Navigation
+**Last Completed:** Feature 02 — Store Gate + Role Auth + Navigation
+**Next:** Feature 03 — Inventory Table UI + CRUD
 
 ## Progress
 
-### Phase 1 — Foundation & Admin (1/7)
+### Phase 1 — Foundation & Admin (2/7)
 
 - [x] 01 Project Scaffold + Design System
-- [ ] 02 Store Gate + Role Auth + Navigation
+- [x] 02 Store Gate + Role Auth + Navigation
 - [ ] 03 Inventory Table UI + CRUD
 - [ ] 04 Groq Vision Auto-Fill
 - [ ] 05 Billing / Invoice
@@ -58,6 +58,13 @@ _Record every deviation from the context docs here: what changed, why, and which
 - (Feature 01) InsForge SDK has no `createSignedUrl` method. For the try-on flow (Feature 13), customer photos are downloaded server-side as Blob via `storage.download()` and passed directly to API4.AI as multipart data instead of a signed URL. Updated `lib/insforge/storage.ts` accordingly.
 - (Feature 01) `recharts` upgraded to v3 (was v2, which is deprecated). API changes in v3 noted for Feature 07 (Dashboard).
 - (Feature 01) Next.js 16.2.9 used (matches spec). `bcryptjs` added as a dependency (pure JS, works in edge runtime).
+- (Feature 02) **Single `(app)` route group instead of three (`(admin)`/`(cashier)`/`(stylist)`).** architecture.md placed `/billing` and `/returns` in two groups each, but Next.js forbids two route groups resolving to the same URL path (parallel-page error). All authenticated pages now live under one `app/(app)/` group with one layout; the Navbar adapts its links by role, and `middleware.ts` enforces per-path role access. architecture.md folder tree is now aspirational on this point.
+- (Feature 02) **`lib/auth.ts` HMAC moved from `node:crypto` (`createHmac`) to Web Crypto (`crypto.subtle`).** The original sync `createHmac` cannot run in `middleware.ts` (Edge runtime has no `node:crypto`), which would have broken every guarded route once a cookie existed. `encodeSession`/`decodeSession` are now async; signature compared in constant time. `Buffer` is kept for base64/hex (available in Next 16 edge runtime).
+- (Feature 02) Created only `store_settings` + `staff` tables (the two this feature touches); remaining tables created per-feature. RLS left disabled — all DB access is server-side via the anon key in V1.
+- (Feature 02) `.env.local` was blank; filled `NEXT_PUBLIC_INSFORGE_URL`, `NEXT_PUBLIC_INSFORGE_ANON_KEY`, and a generated `SESSION_SECRET`. Backend: InsForge `68bdfaz8.ap-southeast`.
+- (Feature 02) `scripts/seed.mjs` seeds 1 store (`VIVAH01`) + 3 staff. **Demo passwords:** owner `owner123`, cashier `cashier123`, stylist `stylist123` — change before any real deployment. Run: `node --env-file=.env.local scripts/seed.mjs` (idempotent).
+- (Feature 02) `/explore` access corrected to stylist+owner (middleware previously also allowed cashier), matching project-overview.md.
+- (Feature 02) Next 16 warns that the `middleware` file convention is deprecated in favour of `proxy`. Left as `middleware.ts` for now (CLAUDE.md/architecture reference it by name); harmless warning, rename later if desired.
 
 ## Notes
 
