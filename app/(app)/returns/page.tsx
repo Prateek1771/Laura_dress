@@ -1,8 +1,10 @@
+import { ReturnsForm } from '@/components/returns/ReturnsForm';
+
 export default function ReturnsPage() {
   return (
-    <div>
+    <div className="mx-auto flex w-full max-w-md flex-col gap-5">
       <h1 className="font-display text-2xl font-semibold text-ink">Returns</h1>
-      <p className="mt-2 text-sm text-ink-muted">Coming soon.</p>
+      <ReturnsForm />
     </div>
   );
 }
