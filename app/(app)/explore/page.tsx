@@ -1,8 +1,28 @@
-export default function ExplorePage() {
+import { ExploreClient } from '@/components/explore/ExploreClient';
+import { createServerClient } from '@/lib/insforge/server';
+import type { InventoryItem } from '@/lib/insforge/types';
+
+export default async function ExplorePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const sessionId = typeof sp.session === 'string' ? sp.session : null;
+
+  const db = createServerClient().database;
+  const { data, error } = await db
+    .from('inventory_items')
+    .select('*')
+    .eq('active', true)
+    .order('created_at', { ascending: false });
+  if (error) console.error('[explore] list query failed:', error);
+  const items = (data ?? []) as InventoryItem[];
+
   return (
-    <div>
+    <div className="flex flex-col gap-5">
       <h1 className="font-display text-2xl font-semibold text-ink">Explore</h1>
-      <p className="mt-2 text-sm text-ink-muted">Coming soon.</p>
+      <ExploreClient items={items} sessionId={sessionId} />
     </div>
   );
 }

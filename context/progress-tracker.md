@@ -2,9 +2,9 @@
 
 ## Current Status
 
-**Current Phase:** Phase 1 COMPLETE → next is Phase 2 (Customer Flow)
-**Last Completed:** Feature 07 — Financial Dashboard
-**Next:** Feature 08 — Customer Onboarding Form (Phase 2)
+**Current Phase:** Phase 2 COMPLETE → next is Phase 3 (Couple + Settings)
+**Last Completed:** Features 12 + 13 — Customer Photo Capture + Virtual Try-On
+**Next:** Feature 14 — Couple Combo Matching (Phase 3)
 
 ## Progress
 
@@ -18,14 +18,14 @@
 - [x] 06 Returns Form
 - [x] 07 Financial Dashboard
 
-### Phase 2 — Customer Flow (0/6)
+### Phase 2 — Customer Flow (6/6) ✅
 
-- [ ] 08 Customer Onboarding Form
-- [ ] 09 Explore Page (Ecommerce Grid)
-- [ ] 10 Shop Suggested (Scoring Engine Integration)
-- [ ] 11 Dress Detail Page
-- [ ] 12 Customer Photo Capture
-- [ ] 13 Virtual Try-On + Gallery
+- [x] 08 Customer Onboarding Form
+- [x] 09 Explore Page (Ecommerce Grid)
+- [x] 10 Shop Suggested (Scoring Engine Integration)
+- [x] 11 Dress Detail Page
+- [x] 12 Customer Photo Capture
+- [x] 13 Virtual Try-On + Gallery
 
 ### Phase 3 — Couple + Settings (0/3)
 
@@ -90,6 +90,18 @@ _Record every deviation from the context docs here: what changed, why, and which
 - (Feature 07) Note: programmatic viewport resize (devtools `resize_page`) leaves the recharts `ResponsiveContainer` blank until reload — a test-harness artifact, not a real bug; a fresh load at any width renders the chart (confirmed 375 / 768 / 1280).
 - **Phase 1 demo data currently in DB:** items SARE-0001 (active), LEHE-0001 (active); 2 bills (#1 UPI ₹1,76,400, #2 Cash ₹18,900); 2 returns. SHER-0001 was a deactivated test item.
 - **Phase 1 full E2E pass (all 7 features in one integrated flow) — PASSED.** Owner stocked via Groq auto-fill (SARE-0002) + edit + availability toggle → cashier sold a 2-item CARD bill (#3, ₹1,20,750) → cashier recorded a return → owner dashboard reflected exact deltas: revenue ₹1,95,300→₹3,16,050 (+1,20,750), bills 2→3, returns 2→3, stock 2/0/0→1/1/1, Card bar appeared, new bill top of Recent Bills with cashier+dress IDs. Role-guard matrix all correct (stylist→/dashboard,/billing redirect to /onboarding; cashier→/inventory,/settings redirect to /billing; unauth→/dashboard→/; bad creds 401). No server/app errors in the run. After this E2E the DB has items SARE-0002 (low_stock) / SARE-0001 (out_of_stock) / LEHE-0001 (in_stock); 3 bills; 3 returns.
+- **Phase 2 backend created:** `styling_sessions`, `recommendations`, `tryons` tables (with FKs) + private buckets `customer-photos`, `tryon-previews`.
+- **API4.AI demo endpoint confirmed live & working** — multipart **file** fields `image` (person) + `image-apparel` (garment); returns `results[0].entities[0].image` as base64 PNG. (This differs from `library-docs.md` which showed `url`/`url-apparel`; the file-field form is what works and avoids needing signed URLs.) No key needed for the demo endpoint.
+- (Feature 08) `createSession` (stylist/owner) INSERTs `styling_sessions`, fires `session_started`, redirects to `/explore?session={id}`. **Couple stores `category: null`** (the two Groom/Bride selects are collected in the UI but couple-specific prefs aren't used until Feature 14, Phase 3); Kids also stores null category. Verified twice (female + kids sessions) incl. couple conditional UI and breakpoints 375/768.
+- (Features 09+10) `POST /api/recommendations` (stylist/owner) maps the session row to `SessionPreferences` and runs the pre-built `recommend()`. **Soft-replace** = insert new `recommendations` rows, then `DELETE … .lt('created_at', beforeTs)` (the SDK has no `.not()`, so a timestamp guard replaces "delete where id not in batch"). Fires `recommendations_generated`. Verified: female session → LEHE-0001 90% (rank 1), SARE-0002 83% (rank 2), out-of-stock SARE-0001 hard-filtered & shown dimmed; rows persisted with templated reasons; kids note; no-session disabled button + banner; grid reflows 2/3/4 cols at 375/768/1280. Tested twice.
+- (Feature 10) Minor copy nuance: when no price range is set, the budget reason renders "Close to your budget" (from the pre-built `buildReasons` in `engine.ts`, since flat noRange=25 ≥ nearRange threshold). Functionally the score is correct; reword later if desired (engine is pure/tested, left as-is).
+- (Features 09+10) Filter panel merged into `ExploreClient` (no separate `FilterPanel.tsx`) — fewer files, all client-side filtering/sorting on the already-fetched active items.
+- (Feature 11) **`next.config.ts` now sets `images.remotePatterns` for `**.insforge.app`** — `ImageGallery` (and any `next/image`) needs the InsForge storage host whitelisted or it errors. Dress detail uses `next/image` (gallery); the explore grid still uses plain `<img>`.
+- (Feature 11) Dress detail (`/explore/[id]`) fires `dress_viewed` server-side; shows the `ScoreBar` + reason chips only when arrived via a scored `?session=` link (reads the `recommendations` row). Role-gated actions via `DressActions` (client): **stylist → Copy Dress ID** (clipboard), **cashier/owner → Add to Bill** (`/billing?item={dress_id}`, the existing Feature-05 prefill). "✨ Preview My Look" button is present; its try-on logic is wired in 12/13. Verified twice (stylist+session showing 90% match + Copy; owner no-session showing Add to Bill). Note: clipboard write couldn't be confirmed in the automated browser (permission-blocked) — standard code, works with a real user gesture.
+- (Features 12+13) **API4.AI demo try-on works end-to-end (real Google-AI result).** Confirmed contract: multipart **file** fields `image` (person) + `image-apparel` (garment) → `results[0].entities[0].image` base64. `POST /api/tryon` inserts a `generating` row, downloads the private customer photo + fetches the public garment image, calls API4.AI (60s timeout, **one retry**), uploads the result to private `tryon-previews`, marks `ready`, fires `tryon_generated`, and **returns the base64 for immediate modal display**. Failure path sets status `failed` (never stuck `generating`).
+- (Features 12+13) **Private-bucket display without signed URLs:** `GET /api/tryon/[id]/image` streams the private preview server-side (used by the gallery); the just-generated preview shows via the returned base64 data URL. Photo capture (`PhotoCaptureModal` inside `DressActions`) does take/upload + consent line + client canvas resize ≤1024px → `saveCustomerPhoto` action → `uploadCustomerPhoto` (private) → sets `styling_sessions.customer_photo_url`.
+- (Features 12+13) Photo capture + try-on modal + gallery are all folded into the `DressActions` client component (fewer files). Verified twice (incl. kill+restart): photo upload → resize → real try-on preview → gallery via streaming route; modals responsive at 375. The `result_image_url` stored, `tryons` row `ready`, no server errors.
+- **Phase 2 demo data now in DB:** 3 styling_sessions (female/lehenga, kids, female no-category), recommendations for the female-no-category session (LEHE 90 / SARE-0002 83), and ≥2 `ready` tryons for SARE-0002 (session has a `customer_photo_url`).
 - **Responsive verified across all breakpoints** (375 / 768 / 1024 / 1280 / 1440): nav collapses to burger ≤768 with full menu; dashboard stat cards 1→2→4 col; recharts chart renders on fresh load at every width (note: programmatic `resize_page` needs a reload — harness artifact); inventory 10-col table scrolls horizontally on mobile; content caps at `max-w-[1200px]` centered on wide screens (verified main=1200 at 1283 viewport).
 
 ## Notes

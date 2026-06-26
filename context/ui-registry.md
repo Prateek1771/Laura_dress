@@ -74,6 +74,12 @@ Reuse these before building anything similar. Most live outside `components/ui/`
 - `BillingClient.tsx` (client) — cart + payment segmented control + invoice panel. Calls `GET /api/inventory/lookup?dressId=` for dress lookup.
 - `ReturnsForm.tsx` (client) — dress lookup + notes + success banner.
 
+### Onboarding / Explore / Dress — `components/onboarding/`, `components/explore/`, `components/dress/` (Phase 2)
+- `OnboardingForm.tsx` (client) — Shopping-For tap cards, occasion chips, Shopping-For-driven category (two selects for Couple), price range → `createSession`.
+- `ExploreClient.tsx` (client) — responsive grid (2/3/4 cols), sort, inline filter panel, "Shop Suggested" (calls `/api/recommendations`, sorts by score, dims non-matches, kids note, no-session banner).
+- `DressCard.tsx` (server) — 3:4 image card, category badge, stock dot, optional `{score}% Match` badge; links with `?session=`.
+- `DressActions.tsx` (client) — role buttons (Copy Dress ID / Add to Bill) **plus** the full try-on flow: `PhotoCaptureModal` (take/upload + consent + canvas resize), try-on modal (calls `/api/tryon`, shows base64 preview), and Try-On Gallery (images via `/api/tryon/[id]/image` streaming route). Reuse the modal `Overlay` pattern here for any future modal.
+
 ### Dashboard — `components/dashboard/`
 - `StatCard.tsx` (server) — `{ label, value, hint? }` metric card. Reusable anywhere.
 - `RecentBillsTable.tsx` (server) — consumes PostgREST-embedded bills (`staff(name)`, `bill_items(inventory_items(dress_id))`).
