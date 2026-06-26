@@ -80,17 +80,22 @@ export async function GET(req: Request) {
     const db = createServerClient().database;
     const { data, error } = await db
       .from('tryons')
-      .select('id, created_at, inventory_items(name)')
+      .select('id, created_at, item_id, inventory_items(id, name, images)')
       .eq('session_id', sessionId)
       .eq('status', 'ready')
       .order('created_at', { ascending: false });
     if (error) throw error;
-    const tryons = (data ?? []).map((t) => ({
-      id: t.id as string,
+    const tryons = (data ?? []).map((t) => {
       // PostGREST types the to-one embed as an array; runtime is an object.
-      name: (t.inventory_items as unknown as { name: string } | null)?.name ?? 'Dress',
-      createdAt: t.created_at as string,
-    }));
+      const item = t.inventory_items as unknown as { id: string; name: string; images: string[] } | null;
+      return {
+        id: t.id as string,
+        itemId: (item?.id ?? t.item_id) as string,
+        name: item?.name ?? 'Dress',
+        image: item?.images?.[0] ?? null,
+        createdAt: t.created_at as string,
+      };
+    });
     return Response.json({ ok: true, data: { tryons } });
   } catch (error) {
     console.error('[tryon] list failed:', error);

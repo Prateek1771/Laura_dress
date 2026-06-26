@@ -1,12 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { DressCard } from './DressCard';
+import { CoupleMatchPanel, type PartnerMatch } from './CoupleMatchPanel';
+import { TryOnGalleryModal } from '@/components/dress/TryOnGalleryModal';
 import { ALL_CATEGORIES, COLORS } from '@/lib/constants';
 import type { InventoryItem } from '@/lib/insforge/types';
 
@@ -19,8 +21,19 @@ const SORTS = [
   { value: 'az', label: 'A–Z' },
 ];
 
-export function ExploreClient({ items, sessionId }: { items: InventoryItem[]; sessionId: string | null }) {
+export function ExploreClient({
+  items,
+  sessionId,
+  wantsCombo = false,
+  openGallery = false,
+}: {
+  items: InventoryItem[];
+  sessionId: string | null;
+  wantsCombo?: boolean;
+  openGallery?: boolean;
+}) {
   const [sort, setSort] = useState('newest');
+  const [galleryOpen, setGalleryOpen] = useState(openGallery && Boolean(sessionId));
   const [gender, setGender] = useState('');
   const [category, setCategory] = useState('');
   const [colors, setColors] = useState<string[]>([]);
@@ -32,6 +45,10 @@ export function ExploreClient({ items, sessionId }: { items: InventoryItem[]; se
   const [kidsMode, setKidsMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [shopError, setShopError] = useState('');
+
+  const [anchor, setAnchor] = useState<InventoryItem | null>(null);
+  const coupleCache = useRef<Map<string, PartnerMatch[]>>(new Map());
+  const comboOn = wantsCombo && Boolean(sessionId);
 
   const suggestActive = scores !== null;
 
@@ -125,6 +142,11 @@ export function ExploreClient({ items, sessionId }: { items: InventoryItem[]; se
         <Button variant="ghost" onClick={() => setShowFilters((s) => !s)}>
           {showFilters ? 'Hide Filters' : 'Filters'}
         </Button>
+        {sessionId && (
+          <Button variant="ghost" onClick={() => setGalleryOpen(true)} title="Try-On Gallery">
+            📷 Gallery
+          </Button>
+        )}
         <span className="ml-auto text-sm text-ink-muted">{ordered.length} items</span>
       </div>
 
@@ -215,9 +237,31 @@ export function ExploreClient({ items, sessionId }: { items: InventoryItem[]; se
           {ordered.map((item) => {
             const score = suggestActive && !kidsMode ? scores!.get(item.id) ?? null : null;
             const dimmed = suggestActive && !kidsMode && !scores!.has(item.id);
-            return <DressCard key={item.id} item={item} sessionId={sessionId} score={score} dimmed={dimmed} />;
+            return (
+              <DressCard
+                key={item.id}
+                item={item}
+                sessionId={sessionId}
+                score={score}
+                dimmed={dimmed}
+                onFindMatch={comboOn ? setAnchor : undefined}
+              />
+            );
           })}
         </div>
+      )}
+
+      {anchor && sessionId && (
+        <CoupleMatchPanel
+          anchor={anchor}
+          sessionId={sessionId}
+          cache={coupleCache.current}
+          onClose={() => setAnchor(null)}
+        />
+      )}
+
+      {galleryOpen && sessionId && (
+        <TryOnGalleryModal sessionId={sessionId} onClose={() => setGalleryOpen(false)} />
       )}
     </div>
   );

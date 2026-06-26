@@ -42,7 +42,12 @@ export const COLOR_HARMONY_MATRIX: Partial<Record<Color, Partial<Record<Color, n
   royal_blue: { gold: 90, ivory: 90 },
   emerald: { champagne: 88, gold: 88 },
   lavender: { grey: 82, blush: 82, champagne: 82 },
+  blush: { champagne: 82 },
 };
+
+// Known clashes (only pairs whose colors exist in COLORS). Spec also lists red↔cream
+// and lime↔red, but those colors aren't in the canonical COLORS list, so they're omitted.
+export const COLOR_CLASH_PAIRS: [Color, Color][] = [['orange', 'magenta']];
 
 export const COLOR_CLASH_SCORE = 25;
 export const COLOR_SAME_SCORE = 75;

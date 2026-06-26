@@ -2,9 +2,9 @@
 
 ## Current Status
 
-**Current Phase:** Phase 2 COMPLETE → next is Phase 3 (Couple + Settings)
-**Last Completed:** Features 12 + 13 — Customer Photo Capture + Virtual Try-On
-**Next:** Feature 14 — Couple Combo Matching (Phase 3)
+**Current Phase:** Phase 3 COMPLETE → all 16 features done 🎉
+**Last Completed:** Feature 16 — Store Settings
+**Next:** Nothing pending — full build (Features 01–16) shipped & verified
 
 ## Progress
 
@@ -27,11 +27,11 @@
 - [x] 12 Customer Photo Capture
 - [x] 13 Virtual Try-On + Gallery
 
-### Phase 3 — Couple + Settings (0/3)
+### Phase 3 — Couple + Settings (3/3) ✅
 
-- [ ] 14 Couple Combo Matching
-- [ ] 15 Try-On Gallery Polish
-- [ ] 16 Store Settings
+- [x] 14 Couple Combo Matching
+- [x] 15 Try-On Gallery Polish
+- [x] 16 Store Settings
 
 ## Decisions Made During Build
 
@@ -115,3 +115,11 @@ _Workarounds, vendor quirks, and anything the next session needs to know._
 - **Before Feature 13:** spike API4.AI production auth — verify the correct auth header (RapidAPI vs direct endpoint) using the production key. Update `library-docs.md` with the confirmed `authHeaders()` pattern before committing to the Feature 13 build estimate.
 - Kids sessions (Feature 10): scoring engine is skipped entirely; explore page shows all active items with a note: "Score-based matching is not available for kids — browsing all items." No gender or category hard-filter applies.
 - DressCard links (Features 09 onward) must include `?session=${sessionId}` to propagate session context into dress detail pages, enabling match score display and the try-on flow.
+- (Feature 14) **Couple combo matching live.** `POST /api/couple {sessionId, itemId}` maps the session → `SessionPreferences`, runs the pre-built `suggestPartnerOutfits(anchor, prefs, items)` (top-5 partner-gender outfits, combined = 0.6×coupleCompat + 0.4×individual), and returns each partner's `overall` + the three sub-scores (recomputed via `coupleCompatibility`, since `ScoredItem` doesn't carry them). No DB write — results are ephemeral and cached client-side per anchor for the session.
+- (Feature 14) **`colorHarmonyScore` in `lib/scoring/couple.ts` was a no-op vs spec** — it only returned same(75)/unlisted(50) and ignored `COLOR_HARMONY_MATRIX`/clash. Fixed (still pure): now takes the **max** harmony across every color-A × color-B pair via a bidirectional matrix lookup, with same-color=75, known clash=25, else 50. Added `COLOR_CLASH_PAIRS` (`orange↔magenta` only — spec's red↔cream / lime↔red use colors not in the canonical `COLORS` list, so omitted) and a `blush↔champagne:82` matrix entry. Verified live: emerald lehenga × ivory/gold sherwani → Color 88 (emerald↔gold matrix hit), overall 86%.
+- (Feature 14) UI: explore page fetches `wants_couple_combo` from the session and passes `wantsCombo` to `ExploreClient`; when on, every `DressCard` shows a corner **"✨ Find Match"** button (stops link propagation) → opens `CoupleMatchPanel` (right slide-over; full-width on mobile) listing top-5 partners with a CSS `conic-gradient` **compatibility ring** (no chart lib) + three `ScoreBar` mini-bars (Color/Theme/Fabric). Panel caches `/api/couple` results in a `Map` keyed by anchor id — re-open = no refetch (verified). Out-of-stock partners filtered out.
+- **No scoring unit-test file** — the project has no test runner configured (the build-plan's `scoring.test.ts` was never created in Phase 1/2). Scoring correctness for Feature 14 was verified via the live panel numbers (math hand-checked: 86/64/52) rather than a unit runner.
+- (Feature 16) **Store Settings live (owner-only).** Replaced the stub with a server page (`app/(app)/settings/page.tsx`) that fetches the single `store_settings` row + all `staff`, rendering `components/settings/SettingsClient.tsx`. Actions (`app/(app)/settings/actions.ts`, all `requireRole(['owner'])` + `revalidatePath('/settings')`): `updateTax` (0–100 validated), `regenerateStoreCode` (random `VIVAH`+4 unambiguous chars), `addStaff` (uniqueness via `bcrypt.compare` loop over existing hashes — reuses the login-route pattern — then `bcrypt.hash`+INSERT), `toggleStaff`. Store section: read-only name, code + Copy + Regenerate (native `confirm()` "This will log out all staff. Confirm?"), currency ₹INR, tax input+Save. Staff section: list with role `Badge` + `Inactive` badge, inline Add Staff form, Deactivate/Activate per row. Verified twice + 375 breakpoint: tax 5→8 saved; duplicate password (owner123) rejected with the exact message; unique add succeeded; toggle flips Inactive↔Activate; **regenerate → old code login fails, new code (`VIVAHZFRG`) logs in** — confirming the code change takes effect (cookies aren't invalidated, matching the design note). Owner-only access enforced by existing `middleware.ts` (Phase 1 E2E already verified cashier/stylist → redirect). Demo state restored afterward (code→VIVAH01, tax→5, test staff removed).
+- (Feature 16) **Decision (regenerate semantics):** `regenerateStoreCode` only updates `store_settings.store_code`; existing signed session cookies stay valid until expiry (the store code isn't part of the cookie). The UI copy says staff must log out and re-enter — that's a procedural note, not a forced invalidation. Matches `build-plan.md` Feature 16 logic.
+- (Feature 15) **Try-on gallery extracted + polished.** The inline `GalleryModal` (Feature 13) is replaced by a shared `components/dress/TryOnGalleryModal.tsx` (self-fetches `/api/tryon?sessionId=`) used by both `DressActions` (dress detail) and `ExploreClient` (explore top-bar **📷 Gallery** button). `GET /api/tryon` now embeds `inventory_items(id, name, images)` and returns `{id, itemId, name, image, createdAt}`. Each gallery row is **side-by-side**: product primary image (left) + generated preview streamed from `/api/tryon/[id]/image` (right), name, formatted date, and a **"Try Another Dress →"** link to `/explore/{itemId}?session=`. `/explore?session=X&gallery=1` auto-opens the overlay (read in `explore/page.tsx` → `openGallery` prop). Empty state: "No try-ons yet…". Verified twice (incl. kill+restart) at 1280/375: auto-open, top-bar button, 3 ready previews stream, empty state on a session with no try-ons; no console errors.
+- **Phase 3 demo data added:** reactivated `SHER-0001` (maroon sherwani, men) and inserted `SHER-0002` (ivory/gold sherwani, men, in_stock) + `INDO-0001` (navy indo-western, men, low_stock) so couple matching has men's partners to suggest (DB previously had women-only active items). New men's items reuse SHER-0001's image URL (placeholder). Created a couple `styling_sessions` row (`wants_couple_combo=true`, occasions wedding+reception) for testing.

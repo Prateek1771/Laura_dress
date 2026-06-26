@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 
 import { Button } from '@/components/ui/Button';
+import { TryOnGalleryModal } from '@/components/dress/TryOnGalleryModal';
 import { saveCustomerPhoto } from '@/app/(app)/explore/[id]/actions';
 import type { StaffRole } from '@/lib/constants';
 
@@ -39,7 +40,6 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
   const [tryon, setTryon] = useState<TryonState>('idle');
   const [result, setResult] = useState<string | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
-  const [gallery, setGallery] = useState<{ id: string; name: string }[]>([]);
 
   async function copyId() {
     try {
@@ -94,17 +94,6 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
     }
   }
 
-  async function openGallery() {
-    setGalleryOpen(true);
-    try {
-      const res = await fetch(`/api/tryon?sessionId=${sessionId}`);
-      const body = await res.json();
-      if (body.ok) setGallery(body.data.tryons);
-    } catch {
-      /* ignore */
-    }
-  }
-
   return (
     <>
       <div className="flex flex-wrap gap-3">
@@ -123,7 +112,7 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
           </Button>
         )}
         {sessionId && (
-          <Button variant="ghost" onClick={openGallery}>
+          <Button variant="ghost" onClick={() => setGalleryOpen(true)}>
             📷 Try-On Gallery
           </Button>
         )}
@@ -138,7 +127,9 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
           onClose={() => setTryon('idle')}
         />
       )}
-      {galleryOpen && <GalleryModal items={gallery} onClose={() => setGalleryOpen(false)} />}
+      {galleryOpen && sessionId && (
+        <TryOnGalleryModal sessionId={sessionId} onClose={() => setGalleryOpen(false)} />
+      )}
     </>
   );
 }
@@ -269,23 +260,3 @@ function TryonModal({
   );
 }
 
-function GalleryModal({ items, onClose }: { items: { id: string; name: string }[]; onClose: () => void }) {
-  return (
-    <Overlay onClose={onClose}>
-      <h2 className="font-display text-lg font-semibold text-ink">Try-On Gallery</h2>
-      {items.length === 0 ? (
-        <p className="mt-4 text-sm text-ink-muted">No try-ons yet. Tap ✨ Preview My Look on any dress.</p>
-      ) : (
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {items.map((t) => (
-            <div key={t.id} className="flex flex-col gap-1">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/api/tryon/${t.id}/image`} alt={t.name} className="aspect-[3/4] w-full rounded-[--radius-input] object-cover" />
-              <span className="truncate text-xs text-ink-secondary">{t.name}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </Overlay>
-  );
-}

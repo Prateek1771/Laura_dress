@@ -17,9 +17,10 @@ interface DressCardProps {
   sessionId: string | null;
   score?: number | null;
   dimmed?: boolean;
+  onFindMatch?: (item: InventoryItem) => void;
 }
 
-export function DressCard({ item, sessionId, score, dimmed }: DressCardProps) {
+export function DressCard({ item, sessionId, score, dimmed, onFindMatch }: DressCardProps) {
   const href = `/explore/${item.id}${sessionId ? `?session=${sessionId}` : ''}`;
   return (
     <Link
@@ -39,6 +40,19 @@ export function DressCard({ item, sessionId, score, dimmed }: DressCardProps) {
           <span className="absolute left-2 top-2">
             <Badge variant="default">{score}% Match</Badge>
           </span>
+        )}
+        {onFindMatch && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onFindMatch(item);
+            }}
+            className="absolute bottom-2 right-2 rounded-full bg-surface/90 px-3 py-1 text-xs font-semibold text-primary shadow-sm backdrop-blur hover:bg-surface"
+          >
+            ✨ Find Match
+          </button>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-1.5 p-3">
