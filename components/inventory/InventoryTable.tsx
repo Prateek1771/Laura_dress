@@ -24,7 +24,7 @@ export function InventoryTable({ items }: { items: InventoryItem[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-[--radius-card] border border-border">
+    <div className="min-w-0 overflow-x-auto rounded-[--radius-card] border border-border">
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-surface-soft text-left text-[11px] uppercase tracking-wide text-ink-muted">

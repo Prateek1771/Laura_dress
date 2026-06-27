@@ -18,7 +18,7 @@ const PROTECTED_PREFIXES: Record<string, string[]> = {
   '/explore': ['stylist', 'owner'],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === '/' || pathname === '/guidelines' || pathname.startsWith('/api/')) {

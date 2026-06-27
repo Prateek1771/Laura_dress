@@ -41,8 +41,17 @@ export async function POST(req: Request) {
 
     const scored = recommend(prefs, items);
 
-    // Soft-replace (architecture invariant): insert new rows first, then delete prior ones.
-    const beforeTs = new Date().toISOString();
+    // Soft-replace (architecture invariant): insert new rows first, then delete the
+    // prior ones by id. Deleting by id (not a created_at cutoff) avoids depending on
+    // app-vs-DB clock agreement — a skew there would otherwise delete the rows we just
+    // inserted.
+    const { data: prior, error: pErr } = await db
+      .from('recommendations')
+      .select('id')
+      .eq('session_id', sessionId);
+    if (pErr) throw pErr;
+    const priorIds = (prior ?? []).map((r) => r.id as string);
+
     if (scored.length) {
       const rows = scored.map((s, i) => ({
         session_id: sessionId,
@@ -54,7 +63,10 @@ export async function POST(req: Request) {
       const { error: insErr } = await db.from('recommendations').insert(rows);
       if (insErr) throw insErr;
     }
-    await db.from('recommendations').delete().eq('session_id', sessionId).lt('created_at', beforeTs);
+    if (priorIds.length) {
+      const { error: delErr } = await db.from('recommendations').delete().in('id', priorIds);
+      if (delErr) throw delErr;
+    }
 
     void captureServerEvent(staff.staffId, 'recommendations_generated', {
       sessionId,

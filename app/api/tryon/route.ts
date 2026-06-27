@@ -59,7 +59,14 @@ export async function POST(req: Request) {
       base64 = await callApi4ai(person, garment); // one retry
     }
 
-    const url = await uploadTryonPreview(tryonId, base64);
+    let url: string;
+    try {
+      url = await uploadTryonPreview(tryonId, base64);
+    } catch {
+      // InsForge presigned upload is occasionally flaky; retry once before failing
+      // the whole try-on (the costly API4.AI generation has already succeeded here).
+      url = await uploadTryonPreview(tryonId, base64);
+    }
     await db.from('tryons').update({ status: 'ready', result_image_url: url }).eq('id', tryonId);
     void captureServerEvent(staff.staffId, 'tryon_generated', { sessionId, itemId, success: true });
 
