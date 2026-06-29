@@ -10,6 +10,7 @@ import { DressCard } from './DressCard';
 import { CoupleLooks } from './CoupleLooks';
 import { CoupleMatchPanel, type PartnerMatch } from './CoupleMatchPanel';
 import { TryOnGalleryModal } from '@/components/dress/TryOnGalleryModal';
+import { Reveal } from '@/components/motion/Reveal';
 import { ALL_CATEGORIES, COLORS } from '@/lib/constants';
 import { BUCKETS, type Bucket } from '@/lib/scoring/buckets';
 import type { InventoryItem } from '@/lib/insforge/types';
@@ -192,7 +193,7 @@ export function ExploreClient({
       )}
 
       {showFilters && (
-        <div className="grid gap-4 rounded-[--radius-card] border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Reveal className="grid gap-4 rounded-[--radius-card] border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
           <Select
             label="Gender"
             value={gender}
@@ -244,7 +245,7 @@ export function ExploreClient({
           >
             Clear All
           </button>
-        </div>
+        </Reveal>
       )}
 
       {coupleOpen && <CoupleLooks />}
@@ -252,14 +253,14 @@ export function ExploreClient({
       {suggestActive && !kidsMode && curated.length > 0 && (
         <div className="flex flex-col gap-3">
           <h2 className="font-display text-lg font-semibold text-ink">Curated for this customer</h2>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+          <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {curated.map(({ label, item }) => (
               <div key={label} className="flex flex-col gap-1.5">
                 <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-primary">{label}</span>
                 <DressCard item={item} sessionId={sessionId} score={scores!.get(item.id) ?? null} />
               </div>
             ))}
-          </div>
+          </Reveal>
         </div>
       )}
 
@@ -268,7 +269,7 @@ export function ExploreClient({
           No dresses match your filters. Try clearing some filters.
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <Reveal stagger className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {ordered.map((item) => {
             const score = suggestActive && !kidsMode ? scores!.get(item.id) ?? null : null;
             const dimmed = suggestActive && !kidsMode && !scores!.has(item.id);
@@ -283,7 +284,7 @@ export function ExploreClient({
               />
             );
           })}
-        </div>
+        </Reveal>
       )}
 
       {anchor && sessionId && (

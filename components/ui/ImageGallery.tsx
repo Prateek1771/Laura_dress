@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Image from 'next/image';
 
+import { Reveal } from '@/components/motion/Reveal';
+
 interface ImageGalleryProps {
   images: string[];
   alt: string;
@@ -21,7 +23,7 @@ export function ImageGallery({ images, alt, className = '' }: ImageGalleryProps)
   }
 
   return (
-    <div className={`flex flex-col gap-3 ${className}`}>
+    <Reveal stagger className={`flex flex-col gap-3 ${className}`}>
       <div className="relative aspect-[3/4] w-full overflow-hidden rounded-[--radius-card] bg-surface-soft">
         <Image
           src={images[active]}
@@ -59,6 +61,6 @@ export function ImageGallery({ images, alt, className = '' }: ImageGalleryProps)
           ))}
         </div>
       )}
-    </div>
+    </Reveal>
   );
 }

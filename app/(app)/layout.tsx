@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 
 import { getSession } from '@/lib/auth';
 import { Navbar } from '@/components/layout/Navbar';
+import { SmoothScroll } from '@/components/motion/SmoothScroll';
 
 // Single authenticated shell. One route group for all roles — Next.js forbids
 // duplicate paths across route groups, and the Navbar adapts links by role.
@@ -11,9 +12,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   if (!session) redirect('/');
 
   return (
-    <>
+    <SmoothScroll>
       <Navbar name={session.name} role={session.role} />
       <main className="mx-auto max-w-[1200px] px-4 py-6">{children}</main>
-    </>
+    </SmoothScroll>
   );
 }

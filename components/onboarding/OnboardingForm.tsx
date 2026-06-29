@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { Reveal } from '@/components/motion/Reveal';
 import { SHOPPING_FOR, OCCASIONS, MEN_CATEGORIES, WOMEN_CATEGORIES, SKIN_TONES } from '@/lib/constants';
 import { createSession } from '@/app/(app)/onboarding/actions';
 
@@ -70,6 +71,7 @@ export function OnboardingForm() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5">
+      <Reveal stagger className="flex flex-col gap-5">
       <Card className="flex flex-col gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Input label="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
@@ -200,6 +202,7 @@ export function OnboardingForm() {
           </div>
         </div>
       </Card>
+      </Reveal>
 
       {error && <p className="text-sm text-status-danger">{error}</p>}
       <Button type="submit" size="lg" disabled={saving}>
