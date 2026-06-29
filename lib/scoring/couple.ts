@@ -89,6 +89,7 @@ export function suggestPartnerOutfits(
         matchScore: combinedScore,
         matchReasons: individual.matchReasons,
         tier: individual.tier,
+        components: individual.components,
       };
     })
     .sort((a, b) => b.matchScore - a.matchScore)

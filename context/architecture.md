@@ -203,6 +203,7 @@ All tables: `id uuid primary key default gen_random_uuid()`, `created_at timesta
 | price | numeric | Sale price ₹ |
 | availability | text | `in_stock` \| `low_stock` \| `out_of_stock` |
 | active | boolean | default true |
+| details | jsonb \| null | Descriptive attributes for the detail page (display-only, not scored): `style`, `fit`, `pattern`, `texture`, `neckline`, `sleeve_type`, `length`, `embellishments[]`, `season[]`, `secondary_colors[]`, `description`. Backfilled from the prototype's Groq-vision metadata via `scripts/enrich-dresses.mjs`. |
 
 ### `styling_sessions`
 
@@ -216,6 +217,7 @@ Created by the customer onboarding form. Everything in the customer flow (recomm
 | shopping_for | text | `male` \| `female` \| `couple` \| `kids` |
 | occasions | jsonb | Array, multiselect — `wedding` `reception` `engagement` `sangeet` `haldi` `mehendi` `cocktail` `festive` `pre_wedding_shoot` `other` |
 | category | text \| null | Style preference from inventory categories; null for `kids` |
+| skin_tone | text \| null | `fair` \| `wheatish` \| `medium` \| `tan` \| `deep`; optional — drives the color score |
 | wants_couple_combo | boolean | default false |
 | price_range_min | numeric \| null | ₹ |
 | price_range_max | numeric \| null | ₹ |

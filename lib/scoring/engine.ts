@@ -10,7 +10,10 @@ import {
   AVAILABILITY_WEIGHTS,
   ADJACENT_OCCASIONS,
   BUDGET_NEAR_RANGE_FACTOR,
+  SKIN_TONE_COLORS,
+  OCCASION_COLORS,
 } from './matrices';
+import type { Color } from '@/lib/constants';
 import type { SessionPreferences, ScoredItem, ScoreTier, ScoreComponents } from './types';
 import type { InventoryItem } from '@/lib/insforge/types';
 
@@ -45,9 +48,13 @@ function scoreBudget(session: SessionPreferences, item: InventoryItem): number {
   return BUDGET_WEIGHTS.none;
 }
 
-function scoreColor(): number {
-  // V1: skin tone not collected; color score defaults to flat 15
-  return COLOR_WEIGHTS.noData;
+function scoreColor(session: SessionPreferences, item: InventoryItem): number {
+  // Palette = flattering skin-tone colors ∪ occasion colors. No skin tone + no mapped
+  // occasion → flat noData (unchanged behavior for skipped / kids / couple / `other` rows).
+  const palette = new Set<Color>(session.skin_tone ? SKIN_TONE_COLORS[session.skin_tone] : []);
+  for (const occ of session.occasions) for (const c of OCCASION_COLORS[occ] ?? []) palette.add(c);
+  if (palette.size === 0) return COLOR_WEIGHTS.noData;
+  return item.colors.some((c) => palette.has(c)) ? COLOR_WEIGHTS.match : COLOR_WEIGHTS.none;
 }
 
 function scoreAvailability(item: InventoryItem): number {
@@ -62,6 +69,7 @@ function buildReasons(components: ScoreComponents): string[] {
     reasons.push('Works well for your occasion');
   if (components.budget >= BUDGET_WEIGHTS.inRange) reasons.push('Within your budget');
   else if (components.budget >= BUDGET_WEIGHTS.nearRange) reasons.push('Close to your budget');
+  if (components.color >= COLOR_WEIGHTS.match) reasons.push('A flattering color for the occasion');
   if (components.availability === AVAILABILITY_WEIGHTS.in_stock) reasons.push('In stock');
   else if (components.availability === AVAILABILITY_WEIGHTS.low_stock) reasons.push('Limited stock');
   return reasons;
@@ -71,7 +79,7 @@ export function scoreItem(session: SessionPreferences, item: InventoryItem): Sco
   const components: ScoreComponents = {
     occasion: scoreOccasion(session, item),
     budget: scoreBudget(session, item),
-    color: scoreColor(),
+    color: scoreColor(session, item),
     availability: scoreAvailability(item),
   };
   const matchScore = Math.min(
@@ -83,8 +91,11 @@ export function scoreItem(session: SessionPreferences, item: InventoryItem): Sco
     matchScore,
     matchReasons: buildReasons(components),
     tier: tierFromScore(matchScore),
+    components,
   };
 }
+
+const ZERO_COMPONENTS: ScoreComponents = { occasion: 0, budget: 0, color: 0, availability: 0 };
 
 function passesHardFilters(session: SessionPreferences, item: InventoryItem): boolean {
   if (!item.active) return false;
@@ -112,6 +123,7 @@ export function recommend(
         matchScore: 0,
         matchReasons: [],
         tier: 'good' as ScoreTier,
+        components: ZERO_COMPONENTS,
       }));
   }
 

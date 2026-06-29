@@ -7,9 +7,11 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { DressCard } from './DressCard';
+import { CoupleLooks } from './CoupleLooks';
 import { CoupleMatchPanel, type PartnerMatch } from './CoupleMatchPanel';
 import { TryOnGalleryModal } from '@/components/dress/TryOnGalleryModal';
 import { ALL_CATEGORIES, COLORS } from '@/lib/constants';
+import { BUCKETS, type Bucket } from '@/lib/scoring/buckets';
 import type { InventoryItem } from '@/lib/insforge/types';
 
 const labelize = (s: string) => s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
@@ -25,11 +27,13 @@ export function ExploreClient({
   items,
   sessionId,
   wantsCombo = false,
+  isCouple = false,
   openGallery = false,
 }: {
   items: InventoryItem[];
   sessionId: string | null;
   wantsCombo?: boolean;
+  isCouple?: boolean;
   openGallery?: boolean;
 }) {
   const [sort, setSort] = useState('newest');
@@ -42,6 +46,7 @@ export function ExploreClient({
   const [showFilters, setShowFilters] = useState(false);
 
   const [scores, setScores] = useState<Map<string, number> | null>(null);
+  const [buckets, setBuckets] = useState<Partial<Record<Bucket, string>> | null>(null);
   const [kidsMode, setKidsMode] = useState(false);
   const [loading, setLoading] = useState(false);
   const [shopError, setShopError] = useState('');
@@ -49,6 +54,7 @@ export function ExploreClient({
   const [anchor, setAnchor] = useState<InventoryItem | null>(null);
   const coupleCache = useRef<Map<string, PartnerMatch[]>>(new Map());
   const comboOn = wantsCombo && Boolean(sessionId);
+  const [coupleOpen, setCoupleOpen] = useState(isCouple || comboOn);
 
   const suggestActive = scores !== null;
 
@@ -105,6 +111,7 @@ export function ExploreClient({
       const m = new Map<string, number>();
       for (const s of body.data.scored as { itemId: string; matchScore: number }[]) m.set(s.itemId, s.matchScore);
       setScores(m);
+      setBuckets(body.data.buckets ?? null);
     } catch {
       setShopError('Could not load suggestions. Try again.');
     } finally {
@@ -114,10 +121,19 @@ export function ExploreClient({
 
   function clearSuggested() {
     setScores(null);
+    setBuckets(null);
     setKidsMode(false);
   }
 
   const matchedCount = suggestActive && !kidsMode ? ordered.filter((i) => scores!.has(i.id)).length : 0;
+
+  const itemById = useMemo(() => new Map(items.map((i) => [i.id, i])), [items]);
+  const curated = useMemo(() => {
+    if (!buckets) return [];
+    return BUCKETS.map((label) => ({ label, item: buckets[label] ? itemById.get(buckets[label]!) : undefined })).filter(
+      (b): b is { label: Bucket; item: InventoryItem } => Boolean(b.item),
+    );
+  }, [buckets, itemById]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -147,6 +163,9 @@ export function ExploreClient({
             📷 Gallery
           </Button>
         )}
+        <Button variant="ghost" onClick={() => setCoupleOpen((o) => !o)} title="Couple look inspiration">
+          💑 Couple Looks {coupleOpen ? '▴' : '▾'}
+        </Button>
         <span className="ml-auto text-sm text-ink-muted">{ordered.length} items</span>
       </div>
 
@@ -225,6 +244,22 @@ export function ExploreClient({
           >
             Clear All
           </button>
+        </div>
+      )}
+
+      {coupleOpen && <CoupleLooks />}
+
+      {suggestActive && !kidsMode && curated.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <h2 className="font-display text-lg font-semibold text-ink">Curated for this customer</h2>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+            {curated.map(({ label, item }) => (
+              <div key={label} className="flex flex-col gap-1.5">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-primary">{label}</span>
+                <DressCard item={item} sessionId={sessionId} score={scores!.get(item.id) ?? null} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

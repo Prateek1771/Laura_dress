@@ -7,6 +7,7 @@ import type {
   Availability,
   PaymentMode,
   ShoppingFor,
+  SkinTone,
   TryonStatus,
   SessionStatus,
 } from '@/lib/constants';
@@ -30,6 +31,20 @@ export interface Staff {
   created_at: string;
 }
 
+export interface DressDetails {
+  style?: string;
+  fit?: string;
+  pattern?: string;
+  texture?: string;
+  neckline?: string;
+  sleeve_type?: string;
+  length?: string;
+  embellishments?: string[];
+  season?: string[];
+  secondary_colors?: string[];
+  description?: string;
+}
+
 export interface InventoryItem {
   id: string;
   dress_id: string;
@@ -46,6 +61,7 @@ export interface InventoryItem {
   price: number;
   availability: Availability;
   active: boolean;
+  details: DressDetails | null;
   created_at: string;
 }
 
@@ -57,6 +73,7 @@ export interface StylingSession {
   shopping_for: ShoppingFor;
   occasions: Occasion[];
   category: Category | null;
+  skin_tone: SkinTone | null;
   wants_couple_combo: boolean;
   price_range_min: number | null;
   price_range_max: number | null;

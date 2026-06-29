@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { requireRole } from '@/lib/auth';
 import { createServerClient } from '@/lib/insforge/server';
 import { captureServerEvent } from '@/lib/posthog';
-import { SHOPPING_FOR, OCCASIONS, ALL_CATEGORIES } from '@/lib/constants';
+import { SHOPPING_FOR, OCCASIONS, ALL_CATEGORIES, SKIN_TONES } from '@/lib/constants';
 
 const schema = z.object({
   customerName: z.string().trim().min(1, 'Customer name is required.'),
@@ -15,6 +15,7 @@ const schema = z.object({
   shoppingFor: z.enum(SHOPPING_FOR),
   occasions: z.array(z.enum(OCCASIONS)).min(1, 'Pick at least one occasion.'),
   category: z.enum(ALL_CATEGORIES).nullable(),
+  skinTone: z.enum(SKIN_TONES).nullable(),
   wantsCoupleCombo: z.boolean(),
   priceMin: z.coerce.number().min(0).nullable(),
   priceMax: z.coerce.number().min(0).nullable(),
@@ -44,6 +45,7 @@ export async function createSession(input: CreateSessionInput): Promise<{ ok: fa
         shopping_for: d.shoppingFor,
         occasions: d.occasions,
         category,
+        skin_tone: d.skinTone,
         wants_couple_combo: d.shoppingFor === 'couple' ? d.wantsCoupleCombo : false,
         price_range_min: d.priceMin,
         price_range_max: d.priceMax,

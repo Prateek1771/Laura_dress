@@ -2,6 +2,7 @@ import { requireRole } from '@/lib/auth';
 import { createServerClient } from '@/lib/insforge/server';
 import { captureServerEvent } from '@/lib/posthog';
 import { recommend } from '@/lib/scoring/engine';
+import { categorize } from '@/lib/scoring/buckets';
 import type { SessionPreferences } from '@/lib/scoring/types';
 import type { InventoryItem } from '@/lib/insforge/types';
 
@@ -34,6 +35,7 @@ export async function POST(req: Request) {
       shopping_for: session.shopping_for,
       occasions: session.occasions ?? [],
       category: session.category ?? null,
+      skin_tone: session.skin_tone ?? null,
       price_range_min: session.price_range_min != null ? Number(session.price_range_min) : null,
       price_range_max: session.price_range_max != null ? Number(session.price_range_max) : null,
       wants_couple_combo: Boolean(session.wants_couple_combo),
@@ -78,6 +80,7 @@ export async function POST(req: Request) {
       ok: true,
       data: {
         shoppingFor: session.shopping_for,
+        buckets: categorize(scored),
         scored: scored.map((s) => ({
           itemId: s.item.id,
           matchScore: s.matchScore,

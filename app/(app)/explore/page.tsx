@@ -21,19 +21,27 @@ export default async function ExplorePage({
   const items = (data ?? []) as InventoryItem[];
 
   let wantsCombo = false;
+  let isCouple = false;
   if (sessionId) {
     const { data: sess } = await db
       .from('styling_sessions')
-      .select('wants_couple_combo')
+      .select('wants_couple_combo, shopping_for')
       .eq('id', sessionId)
       .maybeSingle();
     wantsCombo = Boolean(sess?.wants_couple_combo);
+    isCouple = sess?.shopping_for === 'couple';
   }
 
   return (
     <div className="flex flex-col gap-5">
       <h1 className="font-display text-2xl font-semibold text-ink">Explore</h1>
-      <ExploreClient items={items} sessionId={sessionId} wantsCombo={wantsCombo} openGallery={openGallery} />
+      <ExploreClient
+        items={items}
+        sessionId={sessionId}
+        wantsCombo={wantsCombo}
+        isCouple={isCouple}
+        openGallery={openGallery}
+      />
     </div>
   );
 }

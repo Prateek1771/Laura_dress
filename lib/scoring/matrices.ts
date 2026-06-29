@@ -1,4 +1,4 @@
-import type { Occasion, Color, Fabric } from '@/lib/constants';
+import type { Occasion, Color, Fabric, SkinTone } from '@/lib/constants';
 
 export const OCCASION_WEIGHTS = {
   exact: 35,
@@ -24,6 +24,43 @@ export const AVAILABILITY_WEIGHTS = {
   low_stock: 8,
   out_of_stock: 0,
 } as const;
+
+// Skin-tone → flattering colors. Derived from the reference design's
+// recommendation_engine/rules/skin_rules.json `best` lists, mapped into the canonical
+// COLORS enum (navy blue→navy, royal blue→royal_blue, wine→burgundy, cream→ivory,
+// red→crimson, turquoise→teal; names with no enum equivalent like `purple` dropped).
+// Tunable knob — colors only, no avoid-penalty in V1.
+export const SKIN_TONE_COLORS: Record<SkinTone, Color[]> = {
+  fair: ['navy', 'emerald', 'burgundy', 'maroon', 'royal_blue', 'black'],
+  wheatish: ['emerald', 'burgundy', 'maroon', 'royal_blue', 'gold', 'mustard', 'rust', 'teal'],
+  medium: ['burgundy', 'emerald', 'royal_blue', 'maroon', 'gold', 'orange', 'crimson'],
+  tan: ['white', 'ivory', 'gold', 'coral', 'teal', 'magenta', 'crimson'],
+  deep: ['white', 'ivory', 'gold', 'yellow', 'crimson', 'cobalt', 'fuchsia'],
+};
+
+// Occasion → flattering palette. Ported from the reference design's
+// recommendation_engine/rules/occasion_rules.json, mapped into the canonical COLORS enum
+// (red→crimson, wine→burgundy, navy blue→navy, royal blue→royal_blue, cream→ivory; names
+// with no enum equivalent dropped: turmeric, purple, beige, pastel). Partial so unmapped
+// occasions (e.g. `other`) fall through to graceful noData in scoreColor. Tunable knob.
+export const OCCASION_COLORS: Partial<Record<Occasion, Color[]>> = {
+  wedding: ['crimson', 'maroon', 'burgundy', 'emerald', 'gold', 'royal_blue', 'magenta'],
+  reception: ['burgundy', 'black', 'navy', 'emerald', 'gold', 'champagne'],
+  engagement: ['burgundy', 'royal_blue', 'emerald', 'gold', 'champagne'], // VivahStyle-only; reception-like
+  sangeet: ['royal_blue', 'magenta', 'emerald', 'burgundy'],
+  haldi: ['mustard', 'yellow', 'orange', 'ivory'],
+  mehendi: ['green', 'olive', 'emerald', 'yellow', 'teal'],
+  cocktail: ['black', 'burgundy', 'royal_blue', 'emerald', 'magenta'], // prototype "party"
+  festive: ['crimson', 'orange', 'gold', 'maroon', 'magenta', 'green'],
+  pre_wedding_shoot: ['blush', 'peach', 'ivory', 'lavender', 'teal', 'coral'], // light/casual-ish
+};
+
+// Keyword tables for derived outfit attributes (ported from the reference design's
+// models/outfit.py). Used by lib/scoring/attributes.ts to sort Netflix buckets.
+export const HEAVY_WORDS = ['embroider', 'sequin', 'bead', 'zari', 'stone', 'heavy', 'embellish', 'zardozi', 'mirror'];
+export const LUX_FABRICS: Fabric[] = ['silk', 'velvet', 'brocade'];
+export const LUX_WORDS = ['kanjivaram', 'banarasi', 'designer', 'premium', 'tissue', 'organza'];
+export const TREND_WORDS = ['sequin', 'designer', 'modern', 'contemporary', 'satin', 'crepe', 'fusion', 'trendy'];
 
 export const ADJACENT_OCCASIONS: Partial<Record<Occasion, Occasion[]>> = {
   wedding: ['reception'],

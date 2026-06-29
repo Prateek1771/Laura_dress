@@ -5,7 +5,7 @@ import Link from 'next/link';
 
 import { Button } from '@/components/ui/Button';
 import { TryOnGalleryModal } from '@/components/dress/TryOnGalleryModal';
-import { saveCustomerPhoto } from '@/app/(app)/explore/[id]/actions';
+import { saveCustomerPhoto, createAdhocSession } from '@/app/(app)/explore/[id]/actions';
 import type { StaffRole } from '@/lib/constants';
 
 const MAX_EDGE = 1024;
@@ -30,16 +30,21 @@ interface DressActionsProps {
   dressId: string;
   itemId: string;
   sessionId: string | null;
+  gender: 'men' | 'women';
   hasPhoto: boolean;
 }
 
-export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: DressActionsProps) {
+export function DressActions({ role, dressId, itemId, sessionId, gender, hasPhoto }: DressActionsProps) {
   const [copied, setCopied] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [hasPhotoNow, setHasPhotoNow] = useState(hasPhoto);
   const [tryon, setTryon] = useState<TryonState>('idle');
   const [result, setResult] = useState<string | null>(null);
   const [galleryOpen, setGalleryOpen] = useState(false);
+  // Effective session: the real one, or a walk-in session created on first preview.
+  const [activeSession, setActiveSession] = useState<string | null>(sessionId);
+  const [starting, setStarting] = useState(false);
+  const [previewError, setPreviewError] = useState('');
 
   async function copyId() {
     try {
@@ -51,23 +56,36 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
     }
   }
 
-  function onPreview() {
-    if (!sessionId) return;
+  async function onPreview() {
+    setPreviewError('');
+    let sid = activeSession;
+    if (!sid) {
+      setStarting(true);
+      const res = await createAdhocSession(gender === 'men' ? 'male' : 'female');
+      setStarting(false);
+      if (!res.ok) {
+        setPreviewError(res.error);
+        return;
+      }
+      sid = res.sessionId;
+      setActiveSession(sid);
+    }
     if (!hasPhotoNow) {
       setPhotoOpen(true);
       return;
     }
-    void generate();
+    void generate(sid);
   }
 
-  async function generate() {
+  async function generate(sid = activeSession) {
+    if (!sid) return;
     setTryon('generating');
     setResult(null);
     try {
       const res = await fetch('/api/tryon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, itemId }),
+        body: JSON.stringify({ sessionId: sid, itemId }),
       });
       const body = await res.json();
       if (!body.ok) {
@@ -82,23 +100,24 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
   }
 
   async function onPhotoChosen(file: File) {
+    if (!activeSession) return;
     const resized = await resize(file);
     const fd = new FormData();
-    fd.set('sessionId', sessionId!);
+    fd.set('sessionId', activeSession);
     fd.set('photo', resized);
     const res = await saveCustomerPhoto(fd);
     if (res.ok) {
       setHasPhotoNow(true);
       setPhotoOpen(false);
-      void generate();
+      void generate(activeSession);
     }
   }
 
   return (
     <>
       <div className="flex flex-wrap gap-3">
-        <Button onClick={onPreview} disabled={!sessionId} title={sessionId ? '' : 'Start a styling session first'}>
-          ✨ Preview My Look
+        <Button onClick={onPreview} disabled={starting}>
+          {starting ? 'Starting…' : '✨ Preview My Look'}
         </Button>
 
         {(role === 'cashier' || role === 'owner') && (
@@ -111,12 +130,13 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
             {copied ? 'Copied!' : 'Copy Dress ID'}
           </Button>
         )}
-        {sessionId && (
+        {activeSession && (
           <Button variant="ghost" onClick={() => setGalleryOpen(true)}>
             📷 Try-On Gallery
           </Button>
         )}
       </div>
+      {previewError && <p className="text-sm text-status-danger">{previewError}</p>}
 
       {photoOpen && <PhotoModal onClose={() => setPhotoOpen(false)} onChoose={onPhotoChosen} />}
       {tryon !== 'idle' && (
@@ -127,8 +147,8 @@ export function DressActions({ role, dressId, itemId, sessionId, hasPhoto }: Dre
           onClose={() => setTryon('idle')}
         />
       )}
-      {galleryOpen && sessionId && (
-        <TryOnGalleryModal sessionId={sessionId} onClose={() => setGalleryOpen(false)} />
+      {galleryOpen && activeSession && (
+        <TryOnGalleryModal sessionId={activeSession} onClose={() => setGalleryOpen(false)} />
       )}
     </>
   );

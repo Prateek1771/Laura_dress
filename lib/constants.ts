@@ -43,6 +43,8 @@ export const COLORS = [
   'burgundy', 'white', 'black', 'grey', 'pink', 'orange', 'yellow', 'green',
 ] as const;
 
+export const SKIN_TONES = ['fair', 'wheatish', 'medium', 'tan', 'deep'] as const;
+
 export const FABRICS = [
   'silk', 'velvet', 'brocade', 'georgette', 'chiffon',
   'cotton_silk', 'net', 'other',
@@ -83,6 +85,7 @@ export type WomenCategory = (typeof WOMEN_CATEGORIES)[number];
 export type Category = (typeof ALL_CATEGORIES)[number];
 export type PaymentMode = (typeof PAYMENT_MODES)[number];
 export type Color = (typeof COLORS)[number];
+export type SkinTone = (typeof SKIN_TONES)[number];
 export type Fabric = (typeof FABRICS)[number];
 export type Availability = (typeof AVAILABILITY)[number];
 export type StaffRole = (typeof STAFF_ROLES)[number];

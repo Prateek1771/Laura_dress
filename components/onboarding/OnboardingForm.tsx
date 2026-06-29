@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { SHOPPING_FOR, OCCASIONS, MEN_CATEGORIES, WOMEN_CATEGORIES } from '@/lib/constants';
+import { SHOPPING_FOR, OCCASIONS, MEN_CATEGORIES, WOMEN_CATEGORIES, SKIN_TONES } from '@/lib/constants';
 import { createSession } from '@/app/(app)/onboarding/actions';
 
 type ShoppingFor = (typeof SHOPPING_FOR)[number];
+type SkinTone = (typeof SKIN_TONES)[number];
 
 const SHOPPING_LABELS: Record<ShoppingFor, string> = {
   male: 'Men',
@@ -30,6 +31,7 @@ export function OnboardingForm() {
   const [groomCategory, setGroomCategory] = useState('');
   const [brideCategory, setBrideCategory] = useState('');
   const [wantsCombo, setWantsCombo] = useState(false);
+  const [skinTone, setSkinTone] = useState<SkinTone | ''>('');
   const [priceMin, setPriceMin] = useState('');
   const [priceMax, setPriceMax] = useState('');
   const [error, setError] = useState('');
@@ -53,6 +55,7 @@ export function OnboardingForm() {
         shoppingFor,
         occasions: occasions as never,
         category: showCategory && category ? (category as never) : null,
+        skinTone: skinTone || null,
         wantsCoupleCombo: wantsCombo,
         priceMin: priceMin ? Number(priceMin) : null,
         priceMax: priceMax ? Number(priceMax) : null,
@@ -167,6 +170,34 @@ export function OnboardingForm() {
             onChange={(e) => setPriceMax(e.target.value)}
             hint="Leave blank to show all price points"
           />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted">Skin Tone</span>
+          <p className="text-xs text-ink-secondary">Optional — helps us suggest flattering colors.</p>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+            {SKIN_TONES.map((t) => {
+              const on = skinTone === t;
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setSkinTone(on ? '' : t)}
+                  className={`flex flex-col items-center gap-1.5 rounded-[--radius-card] border p-2 text-xs font-semibold capitalize transition-colors ${
+                    on ? 'border-primary bg-primary-soft text-primary' : 'border-border text-ink-secondary hover:bg-surface-soft'
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/skintones/${t}.jpeg`}
+                    alt={`${t} skin tone`}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                  {labelize(t)}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </Card>
 

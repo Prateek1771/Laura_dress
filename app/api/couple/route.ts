@@ -42,6 +42,7 @@ export async function POST(req: Request) {
       shopping_for: session.shopping_for,
       occasions: session.occasions ?? [],
       category: session.category ?? null,
+      skin_tone: session.skin_tone ?? null,
       price_range_min: session.price_range_min != null ? Number(session.price_range_min) : null,
       price_range_max: session.price_range_max != null ? Number(session.price_range_max) : null,
       wants_couple_combo: Boolean(session.wants_couple_combo),

@@ -75,6 +75,9 @@ export default async function DressDetailPage({
               <Badge variant="dress-id">{item.dress_id}</Badge>
             </div>
             <p className="text-2xl font-bold text-ink">{formatINR(item.price)}</p>
+            {item.details?.description && (
+              <p className="text-sm leading-relaxed text-ink-secondary">{item.details.description}</p>
+            )}
           </div>
 
           {match && (
@@ -93,10 +96,29 @@ export default async function DressDetailPage({
           )}
 
           <dl className="flex flex-col gap-3 text-sm">
+            {item.details?.style && <Detail label="Style" value={item.details.style} />}
             {item.fabric && <Detail label="Fabric" value={labelize(item.fabric)} />}
+            {item.details?.fit && <Detail label="Fit" value={item.details.fit} />}
+            {item.details?.pattern && <Detail label="Pattern" value={item.details.pattern} />}
+            {item.details?.texture && <Detail label="Texture" value={item.details.texture} />}
+            {item.details?.neckline && <Detail label="Neckline" value={item.details.neckline} />}
+            {item.details?.sleeve_type && <Detail label="Sleeve" value={item.details.sleeve_type} />}
+            {item.details?.length && <Detail label="Length" value={item.details.length} />}
             {item.colors.length > 0 && (
               <DetailChips label="Colors" values={item.colors.map(labelize)} />
             )}
+            {item.details?.secondary_colors?.length ? (
+              <DetailChips label="Accents" values={item.details.secondary_colors.map(labelize)} />
+            ) : null}
+            {item.details?.embellishments?.length ? (
+              <DetailChips label="Work" values={item.details.embellishments} />
+            ) : null}
+            {item.occasions.length > 0 && (
+              <DetailChips label="Occasions" values={item.occasions.map(labelize)} />
+            )}
+            {item.details?.season?.length ? (
+              <DetailChips label="Season" values={item.details.season} />
+            ) : null}
             {item.sizes.length > 0 && <DetailChips label="Sizes" values={item.sizes} />}
             {item.tags.length > 0 && <DetailChips label="Tags" values={item.tags} />}
           </dl>
@@ -106,6 +128,7 @@ export default async function DressDetailPage({
             dressId={item.dress_id}
             itemId={item.id}
             sessionId={sessionId}
+            gender={item.gender}
             hasPhoto={hasPhoto}
           />
         </div>
