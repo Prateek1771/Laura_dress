@@ -6,13 +6,16 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
-import type { StaffRole } from '@/lib/constants';
+import { STAFF_ROLES, type StaffRole } from '@/lib/constants';
 
 const ROLE_HOME: Record<StaffRole, string> = {
   owner: '/dashboard',
   cashier: '/billing',
   stylist: '/onboarding',
 };
+
+// ponytail: demo-only credentials, drop before real deploy
+const DEMO_STORE_CODE = 'VIVAH01';
 
 export default function StorePage() {
   const router = useRouter();
@@ -21,15 +24,14 @@ export default function StorePage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function signIn(code: string, pass: string) {
     setError('');
     setLoading(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ storeCode, password }),
+        body: JSON.stringify({ storeCode: code, password: pass }),
       });
       const body = await res.json();
       if (!body.ok) {
@@ -42,6 +44,11 @@ export default function StorePage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    void signIn(storeCode, password);
   }
 
   return (
@@ -73,6 +80,27 @@ export default function StorePage() {
             {loading ? 'Signing in…' : 'Enter Store'}
           </Button>
         </form>
+
+        <div className="mt-6 border-t border-border pt-4">
+          <p className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+            Demo quick login
+          </p>
+          <div className="flex gap-2">
+            {STAFF_ROLES.map((role) => (
+              <Button
+                key={role}
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="flex-1 capitalize"
+                disabled={loading}
+                onClick={() => signIn(DEMO_STORE_CODE, `${role}123`)}
+              >
+                {role}
+              </Button>
+            ))}
+          </div>
+        </div>
       </Card>
     </main>
   );
