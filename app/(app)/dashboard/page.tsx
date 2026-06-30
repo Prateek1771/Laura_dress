@@ -4,7 +4,6 @@ import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { BillsByModeChart } from '@/components/dashboard/BillsByModeChart';
 import { RecentBillsTable, type RecentBill } from '@/components/dashboard/RecentBillsTable';
-import { Reveal } from '@/components/motion/Reveal';
 import { createServerClient } from '@/lib/insforge/server';
 import { formatINR } from '@/lib/format';
 import { PAYMENT_MODES, type PaymentMode } from '@/lib/constants';
@@ -95,12 +94,12 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <Reveal stagger className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Revenue" value={formatINR(revenue)} />
         <StatCard label="Total Bills" value={String(billCount)} />
         <StatCard label="Avg Order Value" value={formatINR(aov)} />
         <StatCard label="Returns" value={String(returnsCount)} />
-      </Reveal>
+      </div>
 
       <Card className="flex flex-col gap-3">
         <h2 className="font-display text-lg font-semibold text-ink">Revenue by Payment Mode</h2>
@@ -112,11 +111,11 @@ export default async function DashboardPage({
         <RecentBillsTable bills={bills.slice(0, 10)} />
       </div>
 
-      <Reveal stagger className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="In Stock" value={String(stockCount('in_stock'))} />
         <StatCard label="Low Stock" value={String(stockCount('low_stock'))} />
         <StatCard label="Out of Stock" value={String(stockCount('out_of_stock'))} />
-      </Reveal>
+      </div>
     </div>
   );
 }
